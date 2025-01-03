@@ -9,34 +9,6 @@ Login
 > Password: s5cAJpM8ev6XHw998pRWG728z
 ```
 
-<details><summary>Tryout</summary>
-
-- 2 files, seen it before
-- try - `cat` - `./level10` - `./level10 token localhost`
-
-```b
-> ls -l
--rwsr-sr-x+ 1 flag10 level10 10817 level10
--rw-------  1 flag10 flag10     26 token
-
-> cat token
-cat: token: Permission denied
-
-> ./level10
-./level10 file host
-	sends file to host if you have access to it
-
-> ./level10 token localhost
-You don't have access to ./token
-```
-
-</details>
-
-Problem
-- The main issue here is file `./token` - we dont have its permission
-- `ltrace` - find out how `./level10` checks permission 
-  - it uses `access()` 
-
 ```b
 > ltrace ./level10 token localhost
 __libc_start_main(0x80486d4, 3, 0xbffff7d4, 0x8048970, 0x80489e0 <unfinished ...>
@@ -63,25 +35,17 @@ fflush(0xb7fd1a20Connecting to localhost:6969 .. )         = 0
                                          ^^^^ 🟡 
 ```
 
-- The program interacts with `localhiost:6969`
-- we need a valid Host IP : 
-  - `127.0.0.1`, or the old trick
-  - `ifconfig | grep 'inet ' | awk 'NR==2 {print $2}' | cut -d ":" -f2`
-
 ```b
 > ./level10 /tmp/tmp $(ifconfig | grep 'inet ' | awk 'NR==2 {print $2}' | cut -d ":" -f2)
 Connecting to Localhost:6969 .. Connected!
 Sending file .. wrote file!
 ```
 
-nc, ltrace
-- it opens and reads and sends out `/tmp/tmp` content
-- it sends the content to `Localhost:6969`
-
 ```b
 # t1
 > nc -kl 6969
 ```
+
 ```b
 # t2
 > touch /tmp/tmp
@@ -89,8 +53,6 @@ nc, ltrace
 > Connecting to Localhost:6969 .. Connected!
 Sending file .. wrote file!
 ```
-
-- we want it to open/read/send the `token` instead!
 
 ```b
 > ltrace ./level10 /tmp/tmp $(ifconfig|grep 'inet '|awk 'NR==2 {print $2}'|cut -d ":" -f2)
