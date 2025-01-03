@@ -7,64 +7,18 @@ Login
 ```b
 > ssh level09@$(ifconfig|grep 'inet '|awk 'NR==2 {print $2}') -p 4242
 > Password: 25749xKZ8L7DkSCwJkT9dyv6f
-> ls -l
--rwsr-sr-x 1 flag09 level09 7640 level09
-----r--r-- 1 flag09 level09   26 token
-```
-
-```b
-> xxd token
-> hexdump -C token
-```
-
-Tryout
-
-```b
-> ./level09 token
-tpmhr
-> ./level09 123
-135
-> ./level09 246
-258
-> ./level09 abcd
-aceg
-> ./level09 xyz
-xz|
-> ./level09 az
-a{
-level09@SnowCrash:~$ ./level09 za
-zb
-level09@SnowCrash:~$ ./level09 zab
-zbd 👈 char = curr - i
-👆
-    ^         ^
-z = z + 0  →  z = z - o
-b = a + 1  →  a = b - 1
-d = b + 2  →  b = d - 2
-    v         v
 ```
 
 Solution
 
-- Simple algo. Either use python2 in vm, (respect the syntax), 
-```b
-# p2
-line = open('/home/user/level09/token').read().strip()
-print 'res/', ''.join(chr(ord(_) - i) for i,_ in enumerate(line))
-```
-- or p3 in Host, `scp` the token to Host first 
-```b
-# p3
-line = open(0, 'rb').read().strip()
-print('res/', ''.join(chr(_ - i) for i,_ in enumerate(line)))
-```
 ```b
 # scp to Host
-> scp -P 4242 level09@$(ifconfig|grep 'inet '|awk 'NR==2 {print $2}'):/home/user/level09/token $(pwd)
+scp -P 4242 level09@$(ifconfig|grep 'inet '|awk 'NR==1{first=$0}END{print $2}'):/home/user/level09/token $(pwd)
     > 25749xKZ8L7DkSCwJkT9dyv6f
-> chmod 777 token 
-> p3 decode.py < token
+chmod 777 token 
+p3 decode.py < token
 ```
+
 ```b
 > su flag09
     f3iji1ju5yuevaus41q1afiuq
