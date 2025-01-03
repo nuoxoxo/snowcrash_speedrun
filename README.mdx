@@ -461,28 +461,11 @@ Login
 ```b
 > ssh level08@$(ifconfig|grep 'inet '|awk 'NR==2 {print $2}') -p 4242
 > Password: fiumuikeil55xe9cu4dood66h
-> ls -l
--rwsr-s---+ 1 flag08 level08 8617 level08
--rw-------  1 flag08 flag08    26 token
-              ^^^^^^ ^^^^^^ both flag08, not level08 🟡
-```
-
-2 files:
-
-```b
-> cat token
-cat: token: Permission denied
-
-> ./level08
-./level08 [file to read]
 ```
 
 Tryout
 
 ```b
-> echo "a" > /tmp/tmp && ./level08 /tmp/tmp
-a
-
 > ltrace ./level08 /tmp/tmp
 __libc_start_main(0x8048554, 2, 0xbffff7d4, 0x80486b0, 0x8048720 <unfinished ...>
 strstr("/tmp/tmp", "token")                                = NULL
@@ -492,28 +475,6 @@ write(1, "a\n", 2a
 )                                         = 2
 +++ exited (status 2) +++
 ```
-
-```b
-> echo "aB" > /tmp/tmp && ./level08 /tmp/tmp
-aB
-
-> ltrace ./level08 /tmp/tmp
-__libc_start_main(0x8048554, 2, 0xbffff7d4, 0x80486b0, 0x8048720 <unfinished ...>
-strstr("/tmp/tmp", "token")                                = NULL
-open("/tmp/tmp", 0, 014435162522)                          = 3
-read(3, "a\n", 1024)                                       = 2
-write(1, "a\n", 2a
-)                                         = 2
-+++ exited (status 2) +++
-```
-
-Observation:
-
-- only the filename matters
-- `./level` will cat the file, as long as filename contains no substr "token"
-- renaming `./token` is not allowed
-- but we can make a symlink of it
-  - syntax: `ln -s real_path_src real_path_symlink`
 
 Solution
 
