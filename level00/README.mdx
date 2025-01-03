@@ -14,88 +14,15 @@ tags: `sed..cut` or `awk`
 
 ###### tags: `puzzle`
 
-### Command list
+### We have a cipher
 ```b
 > cat /etc/passwd 👈 flag0x
 > find / -user flag00 2>/dev/null -exec cat {} \;
     OR
 > find / -user flag00 2>/dev/null -exec cat {} +
-```
-
-### Thought process
-- `pwd`: we are at `/home/user/level00` it's empty
-- `whoami`: level00
-- `ls -ld` or `ls -la` 
-  - `-d`: current dir flag 
-```b
-level00@SnowCrash:~$ ls -ld
-dr-xr-x---+ 1 level00 level00 100 Mar  5  2016 .
-```
-- `dr-xr-x---+` 
-  - User (me) and Group have r-x
-  - no one can write ie. no `vi rm mv touch`
-- `namei -l $(pwd)`
-- `getfacl .` (ACL: Access Control Lists)
-- Not much to do ... In fact writing to `/tmp` is possible 👇
-
-### `/tmp`
-- Conventionally the `/tmp` is  world-writable
-```b
-> ls -ld /tmp
-d-wx-wx-wx 4 root root 80 Nov 19 19:58 /tmp
-  ^^ ^^ 
-```
-
-- We often do `echo "something" > /tmp/go.sh && chmod +x /tmp/go.sh && sh /tmp/go.sh`
-
-### `/etc`
-- `/etc` is another dir we can take advantage of 
-```b
-> ls -ld /etc
-drwxr-xr-x 1 root root 260 Nov 19 18:30 /etc
-       ^ ^
-```
-- We as other_users, can `ls / cat` it 
-```b
-> ls -l /etc
-> ls -l /etc | grep pass
-> cat /etc/passwd
-...
-flag01:42hDRfypTqqnw:3001:3001::/home/flag/flag01:/bin/bash
-...
-```
-- 👆 accidentally got `flag01`
-- `flag01` is a username here. Maybe `flag00` is also a user
-
-### User `flag00`
-- Use `find /` to lookup from root directory
-- `flag00` is indeed a user
-```b
-> find / -user level00 2>/dev/null
-( ... )
-> find / -user flag00 2>/dev/null
-/usr/sbin/john
-/rofs/usr/sbin/john
-> ls -l /usr/sbin/john
-----r--r-- 1 flag00 flag00 15 /usr/sbin/john
-       ^
-> ls -l /rofs/usr/sbin/john
-----r--r-- 1 flag00 flag00 15 /rofs/usr/sbin/john
-       ^
-```
-- `flag00` owns 2 readable files 
-- cat them
-```b
-> find / -user flag00 2>/dev/null -exec cat {} \;
-OR
-> find / -user flag00 2>/dev/null -exec cat {} +
 cdiiddwpgswtgt
 cdiiddwpgswtgt
 ```
-- 👆 we have a cipher
-- `\;` : ends `-exec` and `cat` one file a time
-- `+` : now `find` runs `cat` on several files at once 
-- `2>/dev/null` : no error msg explosion (sending stderr output to `/dev/null`)
 
 ### Decipher 
 ```sh
@@ -103,7 +30,7 @@ a = ord('a')
 for i in range(26): print(''.join(chr(a+(ord(c)+i)%26) for c in s))
 ```
 ```b
-> su flag00 nott*
+> su flag00 *( )*
 > getflag | awk '{print $NF}'
 ```
 
