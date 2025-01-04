@@ -42,7 +42,8 @@ tags: `sed..cut` or `awk`
 
 ###### tags: `puzzle`
 
-### We have a cipher
+We have a cipher
+
 ```b
 > cat /etc/passwd 👈 flag0x
 > find / -user flag00 2>/dev/null -exec cat {} \;
@@ -52,7 +53,8 @@ cdiiddwpgswtgt
 cdiiddwpgswtgt
 ```
 
-### Decipher 
+Decipher 
+
 ```sh
 a = ord('a')
 for i in range(26): print(''.join(chr(a+(ord(c)+i)%26) for c in s))
