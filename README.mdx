@@ -723,7 +723,7 @@ Password: ;getflag | wall
 
 # 12
 
-###### tags: `Perl` `egrep` `double quotes in Perl` 
+###### tags: `Perl` `egrep` `backtick injection
 
 Login
 
@@ -739,8 +739,6 @@ Login
 
 <details><summary>See more</summary>
 
-We have a Perl script 👉 possible `backtick injection` in query string
-
 ```b
 > cat level12.pl 
 #!/usr/bin/env perl
@@ -752,12 +750,15 @@ sub t {
   $nn = $_[1];
   $xx = $_[0];         👈 
   $xx =~ tr/a-z/A-Z/;  👈 
-  $xx =~ s/\s.*//;     👈 
+  $xx =~ s/\s.*//;
 
-  @output = `egrep "^$xx" /tmp/xd 2>&1`; 👈 
+  @output = `egrep "^$xx" /tmp/xd 2>&1`;
+  👆 backticks in Perl will run the Bash cmd 
+  👆  if xx is also in backticks it also gets expanded/exec
   foreach $line (@output) {
       ($f, $s) = split(/:/, $line);
       if($s =~ $nn) {
+      👆 nn is empty bc. arg 1 is empty so ($s =~ "") is always true 
           return 1;
       }
   }
@@ -772,7 +773,7 @@ sub n {
   }    
 }
 
-n(t(param("x"), param("y")));
+n(t(param("x"), param("y"))); 👆 query's key: x, y
 ```
 
 </details>
