@@ -500,14 +500,8 @@ Solution
 ```b
 # scp to Host
 scp -P 4242 level09@$(ifconfig|grep 'inet '|awk 'NR==1{first=$0}END{print $2}'):/home/user/level09/token $(pwd)
-    > 25749xKZ8L7DkSCwJkT9dyv6f
 chmod 777 token 
 p3 decode.py < token
-```
-
-```b
-> su flag09
-    f3iji1ju5yuevaus41q1afiuq
 ```
 
 
