@@ -34,14 +34,17 @@ if [[ "$arg" -ge 0 && "$arg" -le 14 ]]; then
     echo -e "${GREEN}${SP}${SP}${OUTPUT}${RESET}"
     echo -e "${YELLOW}${SP}${SP}${SP}${OUTPUT}${RESET}"
     if [[ "$arg" -eq 0 ]]; then
-        lv="level00"
+        LV="level00"
     elif [[ "$arg" -lt 10 ]]; then
-        lv="level0$1"
+        LV="level0$1"
     else
-        lv="level$1"
+        LV="level$1"
     fi
 else
-    lv="level00"
+    LV="level00"
 fi
 
-ssh ${lv}@$(ifconfig|grep 'inet '|awk 'NR==1 {first=$0} END {print $2}') -p 4242
+IP=$(hostname -I|awk '{print $2}') # on site it's field 2
+# IP=$(ifconfig|grep 'inet '|awk 'NR==1{first=$0}END{print $2}')
+
+ssh -p 4242 ${LV}@${IP}
