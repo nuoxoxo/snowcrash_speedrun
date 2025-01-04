@@ -14,6 +14,8 @@ Login
 -rwsr-sr-x+ 1 flag12 level12 464 level12.pl
 ```
 
+<details><summary>See more</summary>
+
 We have a Perl script 👉 possible `backtick injection` in query string
 
 ```b
@@ -49,6 +51,8 @@ sub n {
 
 n(t(param("x"), param("y")));
 ```
+
+</details>
 
 - `input (x)` is not sanitized before inserted in the cmd 
 - `""` - PERL interpolates/evals variables inside double quotes
